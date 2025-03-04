@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Modelle mit Three.js</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 400px;
+      background: #333;
+      color: white;
+      padding: 10px;
+      position: relative;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    #sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #resize-bar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 100%;
+      cursor: ew-resize;
+      background: #777;
+      z-index: 10;
+    }
+    #three-mount {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+    .sidebar-section {
+      border: 1px solid #666;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+    .model-control {
+      border: 1px solid #555;
+      padding: 6px;
+      margin-top: 6px;
+    }
+    .small-input {
+      width: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div id="sidebar-content">
+      <div class="sidebar-section">
+        <label>STL Modell per Weblink:</label>
+        <input type="text" id="stl-url-input" placeholder="http://..." style="width:100%; margin-top:4px;" />
+        <button id="load-stl-url-button" style="margin-top:4px;">Modell laden</button>
+      </div>
+
+      <div class="sidebar-section">
+        <input type="file" id="file-input" accept=".stl" style="display:none" />
+        <button id="add-model-button">+ Lokales STL Modell hinzufügen</button>
+      </div>
+
+      <div class="sidebar-section">
+        <label>Skalierung für alle Modelle:</label>
+        <input type="range" id="global-scale-input" min="0.1" max="2" step="0.1" value="0.5" />
+        <br>
+        <label>Aktuelle Skalierung: <span id="current-scale">0.5</span></label>
+      </div>
+
+      <div class="sidebar-section">
+        <label>FOV (Field of View):</label>
+        <input type="range" id="fov-input" min="30" max="120" step="1" value="30" />
+        <br>
+        <label>Aktuelles FOV: <span id="current-fov">30</span></label>
+      </div>
+
+      <div class="sidebar-section">
+        <label>Hintergrundfarbe:</label>
+        <input type="color" id="bg-color-input" value="#ffffff" />
+      </div>
+
+      <div class="sidebar-section">
+        <label>Gitter anzeigen:</label>
+        <input type="checkbox" id="grid-toggle" checked>
+      </div>
+
+      <div class="sidebar-section" id="model-controls"></div>
+    </div>
+    <div id="resize-bar"></div>
+  </div>
+  <div id="three-mount"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+
+    let models = [];
+    let sidebarWidth = 300;
+    let globalScale = 0.5;
+    let fov = 30;
+
+    const loader = new STLLoader();
+    const mountRef = document.getElementById('three-mount');
+    const modelControls = document.getElementById('model-controls');
+    const fileInput = document.getElementById('file-input');
+    const globalScaleInput = document.getElementById('global-scale-input');
+    const fovInput = document.getElementById('fov-input');
+    const bgColorInput = document.getElementById('bg-color-input');
+    const gridToggle = document.getElementById('grid-toggle');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 50, 50);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
+    mountRef.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    scene.add(light);
+
+    const gridHelper = new THREE.GridHelper(50, 50);
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(30);
+    scene.add(axesHelper);
+
+    renderer.setClearColor(bgColorInput.value, 1);
+
+    function updateModelControls() {
+      modelControls.innerHTML = '';
+      models.forEach((model, index) => {
+        const modelDiv = document.createElement('div');
+        modelDiv.className = 'model-control';
+        modelDiv.innerHTML = `
+          <label>${model.name}</label><br>
+          <input type="color" value="#${model.material.color.getHexString()}" 
+                 onchange="window.updateColor(${index}, this.value)" />
+          <label>Transparenz</label>
+          <input type="range" min="0.1" max="1" step="0.1" value="${model.opacity}"
+                 onchange="window.updateOpacity(${index}, this.value)" />
+          <br>
+          <label>Anordnung</label>
+          <input type="number" class="small-input" value="${model.renderOrder}"
+                 onchange="window.updateRenderOrder(${index}, this.value)" />
+          <br>
+          <label>Modell Ein / Ausblenden</label>
+          <input type="checkbox" ${model.visible ? 'checked' : ''} 
+                 onchange="window.toggleVisibility(${index}, this.checked)" />
+          <br>
+          <label>Wireframe</label>
+          <input type="checkbox" onchange="window.toggleWireframe(${index}, this.checked)" />
+        `;
+        modelControls.appendChild(modelDiv);
+      });
+    }
+
+    window.updateColor = function(index, value) {
+      models[index].material.color.set(value);
+    };
+
+    window.updateOpacity = function(index, value) {
+      models[index].material.opacity = parseFloat(value);
+      models[index].opacity = parseFloat(value);
+      models[index].material.transparent = true;
+      models[index].material.needsUpdate = true;
+    };
+
+    window.updateRenderOrder = function(index, value) {
+      models[index].mesh.renderOrder = parseInt(value);
+      models[index].renderOrder = parseInt(value);
+    };
+
+    window.toggleVisibility = function(index, checked) {
+      models[index].visible = checked;
+      models[index].mesh.visible = checked;
+    };
+
+    window.toggleWireframe = function(index, checked) {
+      models[index].material.wireframe = checked;
+      models[index].material.needsUpdate = true;
+    };
+
+    function loadModel(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const geometry = loader.parse(event.target.result);
+        geometry.computeVertexNormals();
+        const material = new THREE.MeshPhongMaterial({
+          color: Math.random() * 0xffffff,
+          transparent: true,
+          opacity: 1,
+          side: THREE.DoubleSide
+        });
+        const model = new THREE.Mesh(geometry, material);
+        model.renderOrder = models.length + 1;
+        model.scale.set(0.5, 0.5, 0.5);
+        scene.add(model);
+        models.push({
+          name: file.name,
+          mesh: model,
+          material,
+          opacity: 1,
+          renderOrder: models.length + 1,
+          visible: true
+        });
+        updateModelControls();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function loadModelFromURL(url, options = {}) {
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error('Netzwerkantwort war nicht ok');
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
+          const geometry = loader.parse(arrayBuffer);
+          geometry.computeVertexNormals();
+          
+          const material = new THREE.MeshPhongMaterial({
+            color: options.color ? new THREE.Color(options.color) : Math.random() * 0xffffff,
+            transparent: true,
+            opacity: options.opacity || 1,
+            side: THREE.DoubleSide
+          });
+          
+          const model = new THREE.Mesh(geometry, material);
+          model.renderOrder = options.renderOrder || models.length + 1;
+          model.scale.set(0.5, 0.5, 0.5);
+          model.visible = options.visible !== undefined ? options.visible : true;
+          scene.add(model);
+          
+          // Extrahiere den Dateinamen aus der URL
+          const fileName = url.split('/').pop();
+          
+          models.push({
+            name: fileName,
+            mesh: model,
+            material,
+            opacity: options.opacity || 1,
+            renderOrder: options.renderOrder || models.length + 1,
+            visible: options.visible !== undefined ? options.visible : true
+          });
+          
+          updateModelControls();
+        })
+        .catch(error => {
+          console.error("Fehler beim Laden des STL Modells:", error);
+          alert("Fehler beim Laden des STL Modells. Bitte überprüfe den Link.");
+        });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    globalScaleInput.addEventListener('input', (e) => {
+      globalScale = parseFloat(e.target.value);
+      models.forEach(model => model.mesh.scale.set(globalScale, globalScale, globalScale));
+      document.getElementById('current-scale').textContent = globalScale;
+    });
+
+    fovInput.addEventListener('input', (e) => {
+      fov = parseInt(e.target.value, 10);
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+      document.getElementById('current-fov').textContent = fov;
+    });
+
+    bgColorInput.addEventListener('input', (e) => {
+      renderer.setClearColor(e.target.value, 1);
+    });
+
+    gridToggle.addEventListener('change', (e) => {
+      gridHelper.visible = e.target.checked;
+    });
+
+    document.getElementById('add-model-button').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => loadModel(e.target.files[0]));
+
+    document.getElementById('load-stl-url-button').addEventListener('click', () => {
+      const url = document.getElementById('stl-url-input').value;
+      if (url) {
+        loadModelFromURL(url);
+      }
+    });
+
+    const resizeBar = document.getElementById('resize-bar');
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = sidebarWidth;
+
+    resizeBar.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = sidebarWidth;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      e.preventDefault();
+      const newWidth = startWidth + (e.clientX - startX);
+      if (newWidth > 150 && newWidth < (window.innerWidth - 50)) {
+        sidebarWidth = newWidth;
+        document.getElementById('sidebar').style.width = `${sidebarWidth}px`;
+        renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isResizing = false;
+    });
+
+    // Automatisches Laden des STL-Modells
+    loadModelFromURL('https://raw.githubusercontent.com/AesthetischeZahnmedizinHeilbronn/CAD_CAM/refs/heads/main/STL/1_Before.stl', {
+      visible: true,
+      opacity: 0.5,
+      renderOrder: 2,
+      color: '#00E0FF'
+    });
+    loadModelFromURL('https://raw.githubusercontent.com/AesthetischeZahnmedizinHeilbronn/CAD_CAM/refs/heads/main/STL/2_After_Preparation.stl', {
+      visible: true,
+      opacity: 1.0,
+      renderOrder: 1,
+      color: '#ff0000'
+    });
+    loadModelFromURL('https://raw.githubusercontent.com/AesthetischeZahnmedizinHeilbronn/CAD_CAM/refs/heads/main/STL/3_Mockup.stl', {
+      visible: true,
+      opacity: 0.3,
+      renderOrder: 3,
+      color: '#CDFF00'
+    });
+  </script>
+</body>
+</html>
