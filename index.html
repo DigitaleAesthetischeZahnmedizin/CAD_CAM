@@ -102,6 +102,18 @@
         <input type="checkbox" id="grid-toggle" checked>
       </div>
 
+      <div class="sidebar-section" id="camera-controls">
+        <label>Kameraposition</label>
+        <br>
+        <label>X: </label><input type="number" id="camera-x" value="0" step="1">
+        <br>
+        <label>Y: </label><input type="number" id="camera-y" value="9" step="1">
+        <br>
+        <label>Z: </label><input type="number" id="camera-z" value="70" step="1">
+        <br>
+        <button id="update-camera-button">Kamera aktualisieren</button>
+      </div>
+
       <div class="sidebar-section" id="model-controls"></div>
     </div>
     <div id="resize-bar"></div>
@@ -113,8 +125,9 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
+    // Das globale Array für Modelle – die Reihenfolge entspricht dem Arrayindex
     let models = [];
-    let sidebarWidth = 300;
+    let sidebarWidth = 400;
     let globalScale = 0.5;
     let fov = 30;
 
@@ -129,7 +142,8 @@
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 50, 50);
+    // Standard-Kameraposition: x=0, y=9, z=70
+    camera.position.set(0, 9, 70);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -148,11 +162,14 @@
     const axesHelper = new THREE.AxesHelper(30);
     scene.add(axesHelper);
 
+    // Hintergrundfarbe wird initial gesetzt
     renderer.setClearColor(bgColorInput.value, 1);
 
+    // Update-Funktion für die linke Sidebar – die Modelle werden entsprechend der Reihenfolge im Array angezeigt
     function updateModelControls() {
       modelControls.innerHTML = '';
       models.forEach((model, index) => {
+        if (!model) return;
         const modelDiv = document.createElement('div');
         modelDiv.className = 'model-control';
         modelDiv.innerHTML = `
@@ -204,37 +221,9 @@
       models[index].material.needsUpdate = true;
     };
 
-    function loadModel(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const geometry = loader.parse(event.target.result);
-        geometry.computeVertexNormals();
-        const material = new THREE.MeshPhongMaterial({
-          color: Math.random() * 0xffffff,
-          transparent: true,
-          opacity: 1,
-          side: THREE.DoubleSide
-        });
-        const model = new THREE.Mesh(geometry, material);
-        model.renderOrder = models.length + 1;
-        model.scale.set(0.5, 0.5, 0.5);
-        scene.add(model);
-        models.push({
-          name: file.name,
-          mesh: model,
-          material,
-          opacity: 1,
-          renderOrder: models.length + 1,
-          visible: true
-        });
-        updateModelControls();
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function loadModelFromURL(url, options = {}) {
-      fetch(url)
+    // loadModelFromURL erhält nun zusätzlich einen Index, damit das Modell im Array an der korrekten Stelle abgelegt wird
+    function loadModelFromURL(url, options = {}, index) {
+      return fetch(url)
         .then(response => {
           if (!response.ok) throw new Error('Netzwerkantwort war nicht ok');
           return response.arrayBuffer();
@@ -251,28 +240,36 @@
           });
           
           const model = new THREE.Mesh(geometry, material);
-          model.renderOrder = options.renderOrder || models.length + 1;
+          model.renderOrder = options.renderOrder || (index + 1);
           model.scale.set(0.5, 0.5, 0.5);
           model.visible = options.visible !== undefined ? options.visible : true;
           scene.add(model);
           
-          // Extrahiere den Dateinamen aus der URL
+          // Dateinamen aus der URL extrahieren
           const fileName = url.split('/').pop();
           
-          models.push({
+          models[index] = {
             name: fileName,
             mesh: model,
-            material,
+            material: material,
             opacity: options.opacity || 1,
-            renderOrder: options.renderOrder || models.length + 1,
+            renderOrder: options.renderOrder || (index + 1),
             visible: options.visible !== undefined ? options.visible : true
-          });
-          
+          };
           updateModelControls();
         })
         .catch(error => {
           console.error("Fehler beim Laden des STL Modells:", error);
-          alert("Fehler beim Laden des STL Modells. Bitte überprüfe den Link.");
+          models[index] = {
+            name: 'Fehler: ' + url.split('/').pop(),
+            mesh: null,
+            material: { color: { getHexString: () => '000000' } },
+            opacity: 0,
+            renderOrder: options.renderOrder || (index + 1),
+            visible: false
+          };
+          updateModelControls();
+          throw error;
         });
     }
 
@@ -285,7 +282,11 @@
 
     globalScaleInput.addEventListener('input', (e) => {
       globalScale = parseFloat(e.target.value);
-      models.forEach(model => model.mesh.scale.set(globalScale, globalScale, globalScale));
+      models.forEach(model => {
+        if (model && model.mesh) {
+          model.mesh.scale.set(globalScale, globalScale, globalScale);
+        }
+      });
       document.getElementById('current-scale').textContent = globalScale;
     });
 
@@ -296,21 +297,42 @@
       document.getElementById('current-fov').textContent = fov;
     });
 
+    // Hintergrundfarbe anpassen
     bgColorInput.addEventListener('input', (e) => {
       renderer.setClearColor(e.target.value, 1);
     });
 
+    // Gitter ein- und ausblenden
     gridToggle.addEventListener('change', (e) => {
       gridHelper.visible = e.target.checked;
     });
 
+    // Kamera-Steuerung
+    const cameraXInput = document.getElementById('camera-x');
+    const cameraYInput = document.getElementById('camera-y');
+    const cameraZInput = document.getElementById('camera-z');
+    const updateCameraButton = document.getElementById('update-camera-button');
+
+    updateCameraButton.addEventListener('click', () => {
+      const x = parseFloat(cameraXInput.value);
+      const y = parseFloat(cameraYInput.value);
+      const z = parseFloat(cameraZInput.value);
+      camera.position.set(x, y, z);
+      camera.lookAt(0, 0, 0);
+      controls.update();
+    });
+
     document.getElementById('add-model-button').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => loadModel(e.target.files[0]));
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        loadModelFromURL(URL.createObjectURL(e.target.files[0]), {}, models.length);
+      }
+    });
 
     document.getElementById('load-stl-url-button').addEventListener('click', () => {
       const url = document.getElementById('stl-url-input').value;
       if (url) {
-        loadModelFromURL(url);
+        loadModelFromURL(url, {}, models.length);
       }
     });
 
@@ -341,61 +363,38 @@
       isResizing = false;
     });
 
-    // Automatisches Laden des STL-Modells
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_u.stl', {
-      visible: true,
-      opacity: 0.5,
-      renderOrder: 2,
-      color: '#00E0FF'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_UpperJaw.stl.stl', {
-      visible: true,
-      opacity: 1.0,
-      renderOrder: 1,
-      color: '#ff0000'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/TM UpperJawScan.stl', {
-      visible: true,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#CDFF00'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/2025-02-25-150915-64253-RG-upperjaw.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_PreOpUpper.stl.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_LowerJaw.stl.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_l.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/TM LowerJawScan.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
-    loadModelFromURL('https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/2025-02-25-150915-64253-RG-lowerjaw.stl', {
-      visible: false,
-      opacity: 0.3,
-      renderOrder: 3,
-      color: '#FF00F8'
-    });
+    // Automatisches Laden der STL-Modelle mittels Promise.allSettled
+    const stlFiles = [
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_u.stl', options: { visible: true, opacity: 0.5, renderOrder: 2, color: '#00E0FF' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_UpperJaw.stl.stl', options: { visible: true, opacity: 1.0, renderOrder: 1, color: '#ff0000' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/TM UpperJawScan.stl', options: { visible: true, opacity: 0.3, renderOrder: 3, color: '#CDFF00' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/2025-02-25-150915-64253-RG-upperjaw.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#8F00FF' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_PreOpUpper.stl.stl', options: { visible: false, opacity: 0.3, renderOrder: 2, color: '#FF00F8' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_LowerJaw.stl.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#FF00F8' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_l.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#00E0FF' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/TM LowerJawScan.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#CDFF00' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/2025-02-25-150915-64253-RG-lowerjaw.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#8F00FF' } }
+    ];
+
+    const promises = stlFiles.map((file, index) => loadModelFromURL(file.url, file.options, index));
+
+    Promise.allSettled(promises)
+      .then(results => {
+        const resultsDiv = document.createElement('div');
+        resultsDiv.style.backgroundColor = '#222';
+        resultsDiv.style.color = '#fff';
+        resultsDiv.style.padding = '10px';
+        resultsDiv.innerHTML = '<h3>Modell-Ladeergebnisse:</h3>';
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            resultsDiv.innerHTML += `<p>Modell ${index+1}: Erfolgreich geladen.</p>`;
+          } else {
+            resultsDiv.innerHTML += `<p>Modell ${index+1}: Fehler beim Laden.</p>`;
+          }
+        });
+        document.getElementById('sidebar-content').appendChild(resultsDiv);
+      });
   </script>
 </body>
 </html>
+
