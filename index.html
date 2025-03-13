@@ -85,11 +85,11 @@
         <label>Aktuelle Skalierung: <span id="current-scale">0.5</span></label>
       </div>
 
-      <div class="sidebar-section">
+      <div class="sidebar-section" style="display: none;>
         <label>FOV (Field of View):</label>
-        <input type="range" id="fov-input" min="30" max="120" step="1" value="30" />
+        <input type="range" id="fov-input" min="1" max="180" step="1" value="20" />
         <br>
-        <label>Aktuelles FOV: <span id="current-fov">30</span></label>
+        <label>Aktuelles FOV: <span id="current-fov">20</span></label>
       </div>
 
       <div class="sidebar-section">
@@ -102,7 +102,7 @@
         <input type="checkbox" id="grid-toggle" checked>
       </div>
 
-      <div class="sidebar-section" id="camera-controls">
+      <div class="sidebar-section" id="camera-controls" style="display: none;>
         <label>Kameraposition</label>
         <br>
         <label>X: </label><input type="number" id="camera-x" value="0" step="1">
@@ -125,11 +125,11 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
-    // Das globale Array für Modelle – die Reihenfolge entspricht dem Arrayindex
+    // Globales Array für Modelle – die Reihenfolge entspricht dem Arrayindex
     let models = [];
     let sidebarWidth = 400;
     let globalScale = 0.5;
-    let fov = 30;
+    let fov = 20;
 
     const loader = new STLLoader();
     const mountRef = document.getElementById('three-mount');
@@ -162,10 +162,9 @@
     const axesHelper = new THREE.AxesHelper(30);
     scene.add(axesHelper);
 
-    // Hintergrundfarbe wird initial gesetzt
+    // Hintergrundfarbe initial setzen
     renderer.setClearColor(bgColorInput.value, 1);
 
-    // Update-Funktion für die linke Sidebar – die Modelle werden entsprechend der Reihenfolge im Array angezeigt
     function updateModelControls() {
       modelControls.innerHTML = '';
       models.forEach((model, index) => {
@@ -221,7 +220,7 @@
       models[index].material.needsUpdate = true;
     };
 
-    // loadModelFromURL erhält nun zusätzlich einen Index, damit das Modell im Array an der korrekten Stelle abgelegt wird
+    // loadModelFromURL erhält zusätzlich einen Index und prüft, ob ein Dateiname in den Optionen übergeben wurde
     function loadModelFromURL(url, options = {}, index) {
       return fetch(url)
         .then(response => {
@@ -245,8 +244,8 @@
           model.visible = options.visible !== undefined ? options.visible : true;
           scene.add(model);
           
-          // Dateinamen aus der URL extrahieren
-          const fileName = url.split('/').pop();
+          // Verwende den übergebenen Namen (bei lokalen Daten) oder extrahiere den Dateinamen aus der URL
+          const fileName = options.name || url.split('/').pop();
           
           models[index] = {
             name: fileName,
@@ -323,9 +322,11 @@
     });
 
     document.getElementById('add-model-button').addEventListener('click', () => fileInput.click());
+    // Lokaler Upload: Dateiname wird aus dem File-Objekt übergeben
     fileInput.addEventListener('change', (e) => {
       if (e.target.files[0]) {
-        loadModelFromURL(URL.createObjectURL(e.target.files[0]), {}, models.length);
+        const file = e.target.files[0];
+        loadModelFromURL(URL.createObjectURL(file), { name: file.name }, models.length);
       }
     });
 
@@ -356,6 +357,9 @@
         sidebarWidth = newWidth;
         document.getElementById('sidebar').style.width = `${sidebarWidth}px`;
         renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
+        // Aktualisiere Kameraaspekt und ProjectionMatrix, damit die 3D-Anzeige proportional bleibt
+        camera.aspect = (window.innerWidth - sidebarWidth) / window.innerHeight;
+        camera.updateProjectionMatrix();
       }
     });
 
@@ -363,12 +367,20 @@
       isResizing = false;
     });
 
+    // Initiale Größenanpassung, wenn alle Ressourcen geladen sind
+    window.onload = () => {
+      renderer.setSize(window.innerWidth - sidebarWidth, window.innerHeight);
+      camera.aspect = (window.innerWidth - sidebarWidth) / window.innerHeight;
+      camera.updateProjectionMatrix();
+    };
+
     // Automatisches Laden der STL-Modelle mittels Promise.allSettled
     const stlFiles = [
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_u.stl', options: { visible: true, opacity: 0.5, renderOrder: 2, color: '#00E0FF' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_UpperJaw.stl.stl', options: { visible: true, opacity: 1.0, renderOrder: 1, color: '#ff0000' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/TM UpperJawScan.stl', options: { visible: true, opacity: 0.3, renderOrder: 3, color: '#CDFF00' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/2025-02-25-150915-64253-RG-upperjaw.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#8F00FF' } },
+      { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/Referenzkugeln_0_5mm_Durchmesser.stl', options: { visible: true, opacity: 1.0, renderOrder: 1, color: '#ff0000' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_PreOpUpper.stl.stl', options: { visible: false, opacity: 0.3, renderOrder: 2, color: '#FF00F8' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/08.11.2024 13.22 2565_20240611100718_LowerJaw.stl.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#FF00F8' } },
       { url: 'https://raw.githubusercontent.com/DigitaleAesthetischeZahnmedizin/CAD_CAM/refs/heads/main/STL/149394482_shell_occlusion_l.stl', options: { visible: false, opacity: 0.3, renderOrder: 3, color: '#00E0FF' } },
