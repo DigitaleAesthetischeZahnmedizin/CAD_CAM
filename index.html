@@ -772,6 +772,7 @@
           </div>
         </div>
         <button id="theme-toggle-btn" class="theme-toggle" title="Theme wechseln" aria-label="Theme wechseln" data-i18n-title="theme_title" data-i18n-aria-label="theme_title">☀️</button>
+        <button id="help-doc-btn" class="help-toggle" type="button" title="Dokumentation anzeigen" aria-label="Dokumentation anzeigen" aria-haspopup="dialog" aria-expanded="false">?</button>
       </div>
     </div>
     <div id="sidebar-content">
@@ -2987,6 +2988,237 @@
     syncMeasurementStrategyUi();
     updateAnalysisUIState();
     setAnalysisStatus('status_set_roles', 'warn');
+</script>
+<style id="helpdoc-style">
+.help-toggle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);cursor:pointer;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:all var(--transition);flex-shrink:0;font-family:var(--font-body);}
+.help-toggle:hover{background:var(--bg-elevated);border-color:var(--border-hover);color:var(--text-primary);}
+.helpdoc-overlay{position:fixed;inset:0;z-index:10000;background:var(--overlay-bg);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+.helpdoc-overlay.open{display:flex;}
+.helpdoc-panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);width:100%;max-width:840px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden;color:var(--text-primary);font-family:var(--font-body);}
+.helpdoc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg-tertiary);}
+.helpdoc-head h2{font-size:16px;font-weight:600;color:var(--text-primary);margin:0;}
+.helpdoc-close{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:all var(--transition);}
+.helpdoc-close:hover{border-color:var(--border-hover);color:var(--text-primary);}
+.helpdoc-body{padding:22px 26px;overflow-y:auto;line-height:1.6;font-size:14px;color:var(--text-secondary);}
+.helpdoc-body h1{font-size:20px;font-weight:600;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;}
+.helpdoc-body h2{font-size:16px;font-weight:600;color:var(--text-primary);margin:28px 0 10px;padding-top:14px;border-top:1px solid var(--border);scroll-margin-top:8px;}
+.helpdoc-body h3{font-size:14px;font-weight:600;color:var(--text-primary);margin:18px 0 8px;}
+.helpdoc-body p{margin:0 0 12px;}
+.helpdoc-body ul,.helpdoc-body ol{margin:0 0 14px;padding-left:22px;}
+.helpdoc-body li{margin:0 0 6px;}
+.helpdoc-body strong{color:var(--text-primary);font-weight:600;}
+.helpdoc-body code{font-family:var(--font-mono);font-size:12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1px 5px;color:var(--text-primary);}
+.helpdoc-body img{display:block;max-width:100%;height:auto;margin:8px 0 4px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-primary);}
+.helpdoc-cap{font-size:12px;color:var(--text-muted);font-style:italic;margin:0 0 16px;}
+.helpdoc-body blockquote{margin:0 0 14px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;color:var(--text-secondary);}
+.helpdoc-lead{font-size:13px;color:var(--text-muted);margin:0 0 16px;}
+.helpdoc-toc{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 18px 14px 34px;margin:0 0 8px;}
+.helpdoc-toc li{margin:3px 0;}
+.helpdoc-toc a{color:var(--accent);text-decoration:none;}
+.helpdoc-toc a:hover{text-decoration:underline;}
+</style>
+
+<div id="helpdoc-overlay" class="helpdoc-overlay" role="dialog" aria-modal="true" aria-labelledby="helpdoc-title">
+  <div class="helpdoc-panel">
+    <div class="helpdoc-head">
+      <h2 id="helpdoc-title">📖 Documentation</h2>
+      <button type="button" id="helpdoc-close" class="helpdoc-close" aria-label="Schließen" title="Schließen">&times;</button>
+    </div>
+    <div class="helpdoc-body" id="helpdoc-body">
+
+      <h1>3D Tooth Visualization — User Manual</h1>
+      <p class="helpdoc-lead">Web application for STL/PLY model analysis, heatmap comparison, and distance measurement.</p>
+      <p>This document describes how to operate the <strong>3D Tooth Visualization</strong> web application. The application loads, displays, and precisely measures 3D tooth models in STL and PLY format directly in the web browser — no installation required.</p>
+      <blockquote>Created in the context of an independent procedure for the taking of evidence ("selbständiges Beweisverfahren"). This manual is technical operating documentation only.</blockquote>
+
+      <ol class="helpdoc-toc">
+        <li><a href="#helpdoc-sec-1">Overview</a></li>
+        <li><a href="#helpdoc-sec-2">User interface</a></li>
+        <li><a href="#helpdoc-sec-3">Managing loaded models</a></li>
+        <li><a href="#helpdoc-sec-4">STL/PLY comparison — settings</a></li>
+        <li><a href="#helpdoc-sec-5">Mouse measurement (pins)</a></li>
+        <li><a href="#helpdoc-sec-6">Heatmap display</a></li>
+        <li><a href="#helpdoc-sec-7">Section measurement (2D cut)</a></li>
+        <li><a href="#helpdoc-sec-8">Face scan display</a></li>
+        <li><a href="#helpdoc-sec-9">Quick guide: performing a measurement</a></li>
+      </ol>
+
+      <h2 id="helpdoc-sec-1">1. Overview</h2>
+      <p>The "3D Tooth Visualization" web application makes it possible to load, display, and precisely measure 3D tooth models in STL and PLY format directly in the web browser without installation.</p>
+      <p><strong>Core features</strong></p>
+      <ul>
+        <li>Loading 3D models (STL/PLY) via URL or local file</li>
+        <li>Comparing two models with a color-coded heatmap (deviation display)</li>
+        <li>Point-precise distance measurement by mouse click (pins) in millimeters</li>
+        <li>Section measurement: a 2D cutting plane through the models with edge measurement</li>
+        <li>Display of a textured face scan (PLY + texture) for visualization</li>
+        <li>Switchable light/dark mode</li>
+      </ul>
+
+      <h2 id="helpdoc-sec-2">2. User interface</h2>
+      <p>The application consists of a sidebar (left) containing all settings and the 3D viewer (right). The sidebar is divided into collapsible sections.</p>
+      <img src="doc/images/fig1.png" loading="lazy" alt="Fig. 1: Sidebar — upper section">
+      <p class="helpdoc-cap">Fig. 1: Sidebar — upper section</p>
+      <ol>
+        <li><strong>Title and theme toggle</strong> — the moon/sun icon switches between light and dark design.</li>
+        <li><strong>Language selection</strong> — a total of 84 languages.</li>
+        <li><strong>Load model from web link</strong> — load 3D models (STL/PLY) and optional textures (JPG) via a URL.</li>
+        <li><strong>Local model / texture</strong> — select files from your own computer. For textured models, select the <code>.ply</code> and <code>.jpg</code> files at the same time.</li>
+        <li><strong>Display settings</strong> — configure scaling, background color, and grid display.</li>
+      </ol>
+
+      <h2 id="helpdoc-sec-3">3. Managing loaded models</h2>
+      <p>The "Loaded models" section lists all currently loaded 3D models. Each model can be configured individually.</p>
+      <img src="doc/images/fig2.png" loading="lazy" alt="Fig. 2: Model list with settings">
+      <p class="helpdoc-cap">Fig. 2: Model list with settings</p>
+      <ol>
+        <li><strong>Model heading with counter badge</strong> — shows the total number of loaded models.</li>
+        <li><strong>TARGET badge</strong> — this model is set as the target model for the comparison (the model that is measured).</li>
+        <li><strong>REF badge</strong> — this model is set as the reference model (the baseline for the distance measurement).</li>
+        <li><strong>Color</strong> — change the model's individual color.</li>
+        <li><strong>Transparency</strong> — set the model's opacity (useful for overlapping models).</li>
+        <li><strong>Order</strong> — the number defines which models may overlap others in the display order.</li>
+        <li><strong>Visible</strong> — show or hide the model in the display.</li>
+        <li><strong>Wireframe</strong> — display the model as a wireframe.</li>
+        <li><strong>"As reference"</strong> — set the model as the reference for the comparison.</li>
+        <li><strong>"As target"</strong> — set the model as the target for the comparison.</li>
+      </ol>
+      <blockquote><strong>Important:</strong> For all comparison functions (heatmap, measurement, section), a reference model and a target model must first be defined. The reference model serves as the baseline; the target model is measured against it.</blockquote>
+
+      <h2 id="helpdoc-sec-4">4. STL/PLY comparison — settings</h2>
+      <p>The "STL/PLY comparison (heatmap / measurement)" section contains all settings for the distance analysis.</p>
+      <img src="doc/images/fig3.png" loading="lazy" alt="Fig. 3: Comparison settings">
+      <p class="helpdoc-cap">Fig. 3: Comparison settings</p>
+      <ol>
+        <li><strong>"Prepare measurement"</strong> — computes the spatial data structures (BVH) for fast distance calculation. Must be run once before each measurement.</li>
+        <li><strong>"Show heatmap"</strong> — activates the color-coded deviation display on the target model.</li>
+        <li><strong>"Mouse measurement (pins)"</strong> — activates interactive measurement. Hovering over the model with the mouse shows the distance to the reference model. Clicking places a measurement point (pin).</li>
+        <li><strong>Point size (pins)</strong> — sets the point size in mm for the mouse measurements.</li>
+        <li><strong>Green range ± (mm)</strong> — the tolerance range displayed as "green" (= acceptable deviation). Default: 0.050 mm.</li>
+        <li><strong>Yellow/red &amp; light blue/dark blue ± (mm)</strong> — threshold for the transition between color levels. Default: 1.100 mm.</li>
+        <li><strong>Maximum limit ± (mm)</strong> — the upper bound of the color scale. Deviations beyond it are shown in dark red or dark blue. Default: 4.000 mm.</li>
+        <li><strong>Heatmap transparency</strong> — controls the opacity of the heatmap display on the target model.</li>
+        <li><strong>"Recompute heatmap"</strong> — recomputes the heatmap with changed threshold values.</li>
+        <li><strong>Status display</strong> — shows the current state (e.g. whether roles are set, calculation running, etc.).</li>
+      </ol>
+
+      <h2 id="helpdoc-sec-5">5. Mouse measurement (pins)</h2>
+      <p>The mouse measurement makes it possible to measure the distance between the reference and target model at any location and to fix it as a pin.</p>
+      <img src="doc/images/fig4.png" loading="lazy" alt="Fig. 4: Mouse measurement with placed pins">
+      <p class="helpdoc-cap">Fig. 4: Mouse measurement with placed pins</p>
+      <ol>
+        <li>The <strong>"Mouse measurement (pins)"</strong> checkbox must be activated.</li>
+        <li>When hovering over the target model with the mouse, the current distance value is shown in mm. Clicking places a pin that remains permanently visible.</li>
+        <li><strong>Orange points</strong> = position on the target model; <strong>blue points</strong> = nearest point on the reference model. The connecting line shows the measurement direction.</li>
+      </ol>
+      <p>Pins can be moved by drag and drop (only the label moves; the 3D points remain). "Clear all pins" removes all measurement points.</p>
+
+      <h2 id="helpdoc-sec-6">6. Heatmap display</h2>
+      <p>The heatmap colors the target model according to its deviation from the reference model. The colors range from dark blue (negative deviation / material missing) through green (within tolerance) to dark red (positive deviation / excess material).</p>
+      <img src="doc/images/fig5.png" loading="lazy" alt="Fig. 5: Heatmap with legend and measurement pins">
+      <p class="helpdoc-cap">Fig. 5: Heatmap with legend and measurement pins</p>
+      <ol>
+        <li>The <strong>"Show heatmap"</strong> checkbox is activated — the calculation runs automatically.</li>
+        <li>The color display on the model shows the spatial deviation. Red/orange = excess material (target is thicker than reference); blue = missing material (target is thinner than reference); green = within tolerance.</li>
+        <li>The legend at the bottom right maps the colors to the millimeter values. The signed display shows both the direction and the magnitude of the deviation.</li>
+        <li>Existing pins remain visible while the heatmap is active and continue to show the exact measured values.</li>
+      </ol>
+      <p><strong>Heatmap color interpretation (signed)</strong></p>
+      <ul>
+        <li><strong>Dark red (+4.000 mm):</strong> strong positive deviation — target model is clearly outside.</li>
+        <li><strong>Orange/yellow (+0.220 to +1.100 mm):</strong> moderate positive deviation.</li>
+        <li><strong>Green (±0.050 mm):</strong> within tolerance.</li>
+        <li><strong>Light blue (-0.220 to -1.100 mm):</strong> moderate negative deviation.</li>
+        <li><strong>Dark blue (-4.000 mm):</strong> strong negative deviation — material missing.</li>
+      </ul>
+
+      <h2 id="helpdoc-sec-7">7. Section measurement (2D cut)</h2>
+      <p>The section measurement makes it possible to place a cutting plane through the models and to perform exact 2D edge measurements on that plane.</p>
+      <img src="doc/images/fig6.png" loading="lazy" alt="Fig. 6: Cutting plane with reference and target edges">
+      <p class="helpdoc-cap">Fig. 6: Cutting plane with reference and target edges</p>
+      <ol>
+        <li>Activate <strong>"Draw cutting plane"</strong>, then drag a line in the 3D viewer with click and drag. The cutting plane is computed automatically.</li>
+        <li><strong>Blue line</strong> = section edge of the reference model; <strong>orange line</strong> = section edge of the target model. The camera automatically pivots to the cutting plane.</li>
+      </ol>
+      <img src="doc/images/fig7.png" loading="lazy" alt="Fig. 7: Measurement on the cutting plane">
+      <p class="helpdoc-cap">Fig. 7: Measurement on the cutting plane</p>
+      <ol>
+        <li>Activate <strong>"Measure on section (pins)"</strong> to measure on the cutting plane.</li>
+        <li>The measured values show the distance between the target and reference edge in millimeters, color-coded according to the heatmap scale.</li>
+        <li><strong>Orange points</strong> = target edge; <strong>blue points</strong> = reference edge.</li>
+      </ol>
+
+      <h2 id="helpdoc-sec-8">8. Face scan display</h2>
+      <p>The application can also load textured PLY models, such as a face scan. This is displayed with its associated photo texture and allows the tooth models to be placed in a facial context.</p>
+      <img src="doc/images/fig8.png" loading="lazy" alt="Fig. 8: Textured face scan with overlaid tooth models">
+      <p class="helpdoc-cap">Fig. 8: Textured face scan with overlaid tooth models</p>
+      <ol>
+        <li>The tooth models (STL/PLY) are displayed positioned within the face scan. This allows an assessment of the overall aesthetic effect.</li>
+      </ol>
+
+      <h2 id="helpdoc-sec-9">9. Quick guide: performing a measurement</h2>
+      <p>The following steps are required to perform a distance measurement between two models.</p>
+      <ol>
+        <li>Open the web page.</li>
+        <li>Wait until all models have loaded (status at the bottom of the sidebar).</li>
+        <li>In the "Loaded models" section: set one model as "reference" and another as "target".</li>
+        <li>In the "STL/PLY comparison" section: click "Prepare measurement".</li>
+        <li>Activate "Mouse measurement (pins)" — distances are now shown when hovering over the target model.</li>
+        <li>Click on the model to place measurement points (pins).</li>
+        <li>Optional: activate "Show heatmap" for an area-wide deviation display.</li>
+        <li>Optional: use the section measurement for exact 2D cut measurements.</li>
+      </ol>
+      <p><strong>Keyboard shortcuts</strong></p>
+      <ul>
+        <li><strong>ESC</strong> — deactivate mouse measurement and cutting-plane drawing</li>
+        <li><strong>Mouse wheel</strong> — zoom</li>
+        <li><strong>Left mouse button + drag</strong> — rotate the model</li>
+        <li><strong>Right mouse button + drag</strong> — pan the model</li>
+      </ul>
+      <p><strong>Note on the measurement method</strong></p>
+      <p>For each point on the target model, the application computes the shortest distance to the reference model. Measured values are given in millimeters (mm). Positive values (red) mean that the target model lies above the reference model (excess material / the target is thicker). Negative values (blue) mean that the target model lies below the reference model (material missing / the target is thinner).</p>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('help-doc-btn');
+  var overlay = document.getElementById('helpdoc-overlay');
+  var closeBtn = document.getElementById('helpdoc-close');
+  var body = document.getElementById('helpdoc-body');
+  if(!btn || !overlay){ return; }
+  function openHelp(){
+    overlay.classList.add('open');
+    btn.setAttribute('aria-expanded','true');
+    if(body){ body.scrollTop = 0; }
+    if(closeBtn){ closeBtn.focus(); }
+  }
+  function closeHelp(){
+    overlay.classList.remove('open');
+    btn.setAttribute('aria-expanded','false');
+    btn.focus();
+  }
+  btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openHelp(); });
+  if(closeBtn){ closeBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); closeHelp(); }); }
+  overlay.addEventListener('mousedown', function(e){ if(e.target === overlay){ closeHelp(); } });
+  document.addEventListener('keydown', function(e){
+    if((e.key === 'Escape' || e.key === 'Esc') && overlay.classList.contains('open')){
+      e.stopPropagation(); e.preventDefault(); closeHelp();
+    }
+  }, true);
+  if(body){
+    body.addEventListener('click', function(e){
+      var a = e.target.closest ? e.target.closest('a[href^="#helpdoc-"]') : null;
+      if(a){
+        e.preventDefault();
+        var t = document.getElementById(a.getAttribute('href').slice(1));
+        if(t){ t.scrollIntoView({behavior:'smooth', block:'start'}); }
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>

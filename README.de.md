@@ -11,6 +11,7 @@ Die Anwendung läuft direkt im Browser über GitHub Pages – ohne Installation.
 
 ## Inhaltsverzeichnis
 
+- [Vorschau](#vorschau)
 - [Zweck](#zweck)
 - [Funktionen](#funktionen)
 - [Verzeichnisstruktur](#verzeichnisstruktur)
@@ -18,8 +19,33 @@ Die Anwendung läuft direkt im Browser über GitHub Pages – ohne Installation.
 - [Verwendete Bibliotheken / Lizenzhinweise](#verwendete-bibliotheken--lizenzhinweise)
 - [Lizenz](#lizenz)
 - [Hinweise & Haftungsausschluss](#hinweise--haftungsausschluss)
+- [Klinische Dokumentation](#klinische-dokumentation)
 
 > 📖 Die vollständige Bedienungsanleitung mit Screenshots findet sich in **[`doc/README.md`](doc/README.md)**.
+
+---
+
+## Vorschau
+
+Einige Eindrücke des Werkzeugs im Einsatz – Abweichungs-Heatmap, Abstandsmessung, Abschnitt-Vermessung und ein texturiertes Modell:
+
+![Abstandsmessung mit Pins](media/tool/Measurement1.png)
+*Abstandsmessung (Pins) am Zielmodell.*
+
+![Abstandsmessung mit Pins – Überlagerung](media/tool/Measurement2.png)
+*Abstandsmessung (Pins) – Referenz und Ziel überlagert.*
+
+![Abweichungs-Heatmap](media/tool/Heatmap1.png)
+*Abweichungs-Heatmap (signiert) mit Messpins.*
+
+![Abweichungs-Heatmap – Detailansicht](media/tool/Heatmap2.png)
+*Abweichungs-Heatmap (signiert) – Detailansicht.*
+
+![Abschnitt-Vermessung](media/tool/Section_measurement.png)
+*Abschnitt-Vermessung (2D-Schnitt) entlang der Schnittebene.*
+
+![Texturiertes PLY-Modell](media/tool/Textur_PLY.png)
+*Texturiertes PLY-Modell – Zahnmodelle im Gesichtsscan positioniert.*
 
 ---
 
@@ -62,6 +88,7 @@ streitgegenständlichen Sachverhalts.
 | `index.html` | Die vollständige Web-Anwendung (3D-Viewer & Vermessung). |
 | `STL/` | Die für den Vergleich verwendeten 3D-Modelle. |
 | `doc/` | Bedienungsanleitung mit nummerierten Screenshots (siehe unten). |
+| `media/` | In dieser README gezeigte Tool-Screenshots und klinische Fallbilder/Video. |
 
 📖 **Dokumentation:** Eine ausführliche Bedienungsanleitung (Englisch) findet sich in **[`doc/README.md`](doc/README.md)**.
 
@@ -120,3 +147,77 @@ Lizenztext: https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de
 
 - Reines **Visualisierungs- und Messwerkzeug** – **kein Medizinprodukt**, keine Diagnose und keine Behandlungsempfehlung.
 - Mess- und Heatmap-Ergebnisse hängen von Qualität, Auflösung und Ausrichtung (Registrierung) der Eingangsdaten ab.
+
+---
+
+## Klinische Dokumentation
+
+> Die folgenden Bilder dokumentieren den Einzelfall (eigene Unterlagen des Patienten). Personenbezogene
+> Metadaten (EXIF/GPS, Geräte- und Zeitstempel-Informationen) wurden aus allen Dateien entfernt.
+
+### Ausgangszustand
+
+![Natürliche Zähne vor der Behandlung](media/clinical/Image_Natural_Teeth_Before.png)
+*Ausgangszustand – natürliche Zähne vor der Behandlung.*
+
+### Nach der Präparation
+
+![Nach der Präparation 1](media/clinical/Image_After_Preparation1.png)
+*Nach der Präparation (1).*
+
+![Nach der Präparation 2](media/clinical/Image_After_Preparation2.png)
+*Nach der Präparation (2).*
+
+### Ergebnis
+
+![Ergebnis 1](media/clinical/Image_Result1.png)
+*Ergebnis – eingegliederte Restaurationen (1).*
+
+![Ergebnis 2](media/clinical/Image_Result2.png)
+*Ergebnis – eingegliederte Restaurationen (2).*
+
+![Ergebnis 3](media/clinical/Image_Result3.png)
+*Ergebnis – eingegliederte Restaurationen (3).*
+
+### Röntgenaufnahmen
+
+![Panoramaaufnahme vorher](media/clinical/OPG_Before.png)
+*Panoramaaufnahme (OPG) – vorher.*
+
+![Panoramaaufnahme nachher](media/clinical/OPG_After.png)
+*Panoramaaufnahme (OPG) – nachher.*
+
+![Zahnfilm Region 11](media/clinical/Roe_11.png)
+*Zahnfilm (periapikal) – Region 11.*
+
+![Zahnfilm Region 13](media/clinical/Roe_13.png)
+*Zahnfilm (periapikal) – Region 13.*
+
+![Zahnfilm Region 23](media/clinical/Roe_23.png)
+*Zahnfilm (periapikal) – Region 23.*
+
+### Intraorale Nahaufnahmen
+
+![Intraorale Nahaufnahme Region 11](media/clinical/Endoscope_11.png)
+*Intraorale Nahaufnahme – Region 11.*
+
+![Intraorale Nahaufnahme Region 12](media/clinical/Endoscope_12.png)
+*Intraorale Nahaufnahme – Region 12.*
+
+![Intraorale Nahaufnahme Region 13](media/clinical/Endoscope_13.png)
+*Intraorale Nahaufnahme – Region 13.*
+
+![Intraorale Nahaufnahme Region 21](media/clinical/Endoscope_21.png)
+*Intraorale Nahaufnahme – Region 21.*
+
+![Intraorale Nahaufnahme Region 22](media/clinical/Endoscope_22.png)
+*Intraorale Nahaufnahme – Region 22.*
+
+![Intraorale Nahaufnahme Region 23](media/clinical/Endoscope_23.png)
+*Intraorale Nahaufnahme – Region 23.*
+
+### Video
+
+<a href="media/clinical/Endoscope_Video.mp4"><img src="media/clinical/Video_Thumbnail.png" width="480" alt="Intraorales Video – zum Abspielen klicken"></a>
+
+*Intraorales Video – zum Öffnen und Abspielen auf das Bild klicken.*

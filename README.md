@@ -11,6 +11,7 @@ The application runs directly in the browser via GitHub Pages — no installatio
 
 ## Table of contents
 
+- [Preview](#preview)
 - [Purpose](#purpose)
 - [Features](#features)
 - [Repository structure](#repository-structure)
@@ -18,8 +19,33 @@ The application runs directly in the browser via GitHub Pages — no installatio
 - [Third-party libraries / license notices](#third-party-libraries--license-notices)
 - [License](#license)
 - [Notes & disclaimer](#notes--disclaimer)
+- [Clinical documentation](#clinical-documentation)
 
 > 📖 The full user manual with screenshots is in **[`doc/README.md`](doc/README.md)**.
+
+---
+
+## Preview
+
+A few impressions of the tool in use — deviation heatmap, distance measurement, section measurement, and a textured model:
+
+![Distance measurement with pins](media/tool/Measurement1.png)
+*Distance measurement (pins) on the target model.*
+
+![Distance measurement with pins — overlay view](media/tool/Measurement2.png)
+*Distance measurement (pins) — reference and target overlaid.*
+
+![Deviation heatmap](media/tool/Heatmap1.png)
+*Deviation heatmap (signed) with measurement pins.*
+
+![Deviation heatmap — detailed view](media/tool/Heatmap2.png)
+*Deviation heatmap (signed) — detailed view.*
+
+![Section measurement](media/tool/Section_measurement.png)
+*Section measurement (2D cut) along the cutting plane.*
+
+![Textured PLY model](media/tool/Textur_PLY.png)
+*Textured PLY model — tooth models placed within a face scan.*
 
 ---
 
@@ -61,6 +87,7 @@ The application serves solely to illustrate the technical aspects of the matter 
 | `index.html` | The complete web application (3D viewer & measurement). |
 | `STL/` | The 3D models used for comparison. |
 | `doc/` | User manual with numbered screenshots (see below). |
+| `media/` | Tool screenshots and clinical case images/video shown in this README. |
 
 📖 **Documentation:** A detailed user manual is available in **[`doc/README.md`](doc/README.md)**.
 
@@ -119,3 +146,77 @@ License text: https://creativecommons.org/licenses/by-nc-nd/4.0/
 
 - Purely a **visualization and measurement tool** — **not a medical device**, not a diagnosis, and not a treatment recommendation.
 - Measurement and heatmap results depend on the quality, resolution, and alignment (registration) of the input data.
+
+---
+
+## Clinical documentation
+
+> The following images document the individual case (the patient's own records). Personal metadata
+> (EXIF/GPS, device and timestamp information) has been removed from all files.
+
+### Initial situation
+
+![Natural teeth before treatment](media/clinical/Image_Natural_Teeth_Before.png)
+*Initial situation — natural teeth before treatment.*
+
+### After preparation
+
+![After preparation 1](media/clinical/Image_After_Preparation1.png)
+*After preparation (1).*
+
+![After preparation 2](media/clinical/Image_After_Preparation2.png)
+*After preparation (2).*
+
+### Result
+
+![Result 1](media/clinical/Image_Result1.png)
+*Result — restorations in place (1).*
+
+![Result 2](media/clinical/Image_Result2.png)
+*Result — restorations in place (2).*
+
+![Result 3](media/clinical/Image_Result3.png)
+*Result — restorations in place (3).*
+
+### Radiographs
+
+![Panoramic radiograph before](media/clinical/OPG_Before.png)
+*Panoramic radiograph (OPG) — before.*
+
+![Panoramic radiograph after](media/clinical/OPG_After.png)
+*Panoramic radiograph (OPG) — after.*
+
+![Periapical radiograph region 11](media/clinical/Roe_11.png)
+*Periapical radiograph — region 11.*
+
+![Periapical radiograph region 13](media/clinical/Roe_13.png)
+*Periapical radiograph — region 13.*
+
+![Periapical radiograph region 23](media/clinical/Roe_23.png)
+*Periapical radiograph — region 23.*
+
+### Intraoral close-ups
+
+![Intraoral close-up region 11](media/clinical/Endoscope_11.png)
+*Intraoral close-up — region 11.*
+
+![Intraoral close-up region 12](media/clinical/Endoscope_12.png)
+*Intraoral close-up — region 12.*
+
+![Intraoral close-up region 13](media/clinical/Endoscope_13.png)
+*Intraoral close-up — region 13.*
+
+![Intraoral close-up region 21](media/clinical/Endoscope_21.png)
+*Intraoral close-up — region 21.*
+
+![Intraoral close-up region 22](media/clinical/Endoscope_22.png)
+*Intraoral close-up — region 22.*
+
+![Intraoral close-up region 23](media/clinical/Endoscope_23.png)
+*Intraoral close-up — region 23.*
+
+### Video
+
+<a href="media/clinical/Endoscope_Video.mp4"><img src="media/clinical/Video_Thumbnail.png" width="480" alt="Intraoral video — click to play"></a>
+
+*Intraoral video — click the image to open and play it.*
