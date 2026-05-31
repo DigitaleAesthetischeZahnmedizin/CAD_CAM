@@ -47,6 +47,9 @@ A few impressions of the tool in use — deviation heatmap, distance measurement
 ![Textured PLY model](media/tool/Textur_PLY.png)
 *Textured PLY model — tooth models placed within a face scan.*
 
+![Textured PLY model — deviation view](media/tool/Textur_PLY2.png)
+*Textured PLY model — deviation view within the face scan.*
+
 ---
 
 ## Purpose

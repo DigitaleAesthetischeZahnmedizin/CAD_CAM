@@ -47,6 +47,9 @@ Einige Eindrücke des Werkzeugs im Einsatz – Abweichungs-Heatmap, Abstandsmess
 ![Texturiertes PLY-Modell](media/tool/Textur_PLY.png)
 *Texturiertes PLY-Modell – Zahnmodelle im Gesichtsscan positioniert.*
 
+![Texturiertes PLY-Modell – Abweichungsansicht](media/tool/Textur_PLY2.png)
+*Texturiertes PLY-Modell – Abweichungsansicht im Gesichtsscan.*
+
 ---
 
 ## Zweck
